@@ -1,0 +1,241 @@
+Public f_name As Variant
+Public data_count As Long
+Public owa, owd As Object
+Public my_path As String
+Declare PtrSafe Sub Sleep Lib "kernel32" (ByVal dwMilliseconds As Long)
+
+Sub calc_master_main()
+    Dim i As Long
+    Application.DisplayAlerts = False
+    Application.ScreenUpdating = False
+    Application.Calculation = xlCalculationManual
+      
+    Application.StatusBar = "Getting Input Data..."
+    my_path = ThisWorkbook.Path
+    
+    get_data
+    
+    If f_name > "" Then
+        progress.F1.Width = 0
+        progress.msg.Caption = "Initializing.."
+        progress.Show
+        progress.F1.Width = 5
+        
+        For i = 2 To data_count
+            
+            
+            Application.StatusBar = "Calculating..."
+            x = do_calculation(i)
+            
+            Application.StatusBar = "Creating Word file"
+            open_word_template
+            x = create_doc(i)
+            
+            Application.StatusBar = "Preparing PDF"
+            x = save_files(i)
+            progress.msg.Caption = "Finished " & (i - 1) & " of " & data_count - 1
+            close_down
+            
+            progress.F1.Width = (i / data_count) * 250
+            
+        Next i
+        
+        progress.Hide
+    End If
+    Application.DisplayAlerts = True
+    Application.ScreenUpdating = True
+    Application.StatusBar = False
+    Application.Calculation = xlCalculationAutomatic
+
+End Sub
+Public Function do_calculation(ByVal i As Long)
+    
+    lts6.Range("C81") = ds.Range("B" & i).Value
+    lts6.Range("C83") = ds.Range("C" & i).Value
+    lts6.Range("C85") = ds.Range("D" & i).Value
+    lts6.Range("C87") = ds.Range("E" & i).Value
+    lts6.Range("C96") = ds.Range("F" & i).Value
+    lts6.Range("C198") = ds.Range("G" & i).Value
+    lts6.Range("C200") = ds.Range("H" & i).Value
+    lts6.Range("C202") = ds.Range("I" & i).Value
+    lts6.Range("C204") = ds.Range("J" & i).Value
+    lts6.Range("C213") = ds.Range("K" & i).Value
+    lts6.Range("S4") = ds.Range("L" & i).Value
+    lts6.Range("S6") = ds.Range("M" & i).Value
+    lts6.Range("C224") = ds.Range("N" & i).Value
+    
+    DesignLoading.Range("B6") = ds.Range("A" & i).Value 'Project name
+    
+    Application.Calculate
+End Function
+Public Function create_doc(ByVal i As Long)
+    
+    owd.Bookmarks("project_ID").Range.Text = ds.Range("R" & i)
+    owd.Bookmarks("project_ID_hdr").Range.Text = ds.Range("R" & i)
+    owd.Bookmarks("Site_ID").Range.Text = ds.Range("S" & i)
+    owd.Bookmarks("site_address").Range.Text = ds.Range("T" & i)
+    owd.Bookmarks("Site_city_state_zip").Range.Text = ds.Range("U" & i)
+    owd.Bookmarks("customer_address").Range.Text = ds.Range("V" & i)
+    owd.Bookmarks("customer_city_state_zip").Range.Text = ds.Range("W" & i)
+    
+    owd.Bookmarks("Vendor_info1_1").Range.Text = ds.Range("X" & i)
+    owd.Bookmarks("Vendor_info1_2").Range.Text = ds.Range("X" & i)
+    owd.Bookmarks("Vendor_info1_3").Range.Text = ds.Range("X" & i)
+    owd.Bookmarks("Vendor_info1_4").Range.Text = ds.Range("X" & i)
+    owd.Bookmarks("Vendor_info1_5").Range.Text = ds.Range("X" & i)
+    owd.Bookmarks("Vendor_info1_6").Range.Text = ds.Range("X" & i)
+    
+    owd.Bookmarks("vender_street_address").Range.Text = ds.Range("Y" & i)
+    owd.Bookmarks("Vendor_city_and_state_Zip").Range.Text = ds.Range("Z" & i)
+    owd.Bookmarks("Vendor_phone").Range.Text = ds.Range("AA" & i)
+    owd.Bookmarks("customer_name").Range.Text = ds.Range("AC" & i)
+    owd.Bookmarks("construction_method").Range.Text = ds.Range("AD" & i)
+    owd.Bookmarks("newpoleornot").Range.Text = ds.Range("AE" & i)
+    owd.Bookmarks("newfoundastionornot").Range.Text = ds.Range("AG" & i)
+    owd.Bookmarks("vendor_info3").Range.Text = ds.Range("AJ" & i)
+    owd.Bookmarks("pile_legnth").Range.Text = ds.Range("AK" & i)
+    
+    'From Calculation sheet
+    owd.Bookmarks("strength_ratio1").Range.Text = Round(SteelPole.Range("C66").Value * 100, 0)
+    owd.Bookmarks("strength_ratio2").Range.Text = Round(SteelPole.Range("C66").Value * 100, 0)
+    owd.Bookmarks("foundation_strength").Range.Text = Round(NonconstrainedFoundation.Range("C30").Value, 1)
+    owd.Bookmarks("foundation_ratio").Range.Text = Round(NonconstrainedFoundation.Range("C30").Value / 7 * 100, 0)
+    
+     Application.ScreenUpdating = True
+     Application.DisplayAlerts = True
+     DesignLoading.Range("Print_Area").CopyPicture xlPrinter
+     Sleep 100
+     owd.Bookmarks("ex_p1").Range.Paste
+     DoEvents
+     
+     SteelPole.Range("Print_Area").CopyPicture xlPrinter
+     Sleep 100
+     owd.Bookmarks("ex_p2").Range.Paste
+     DoEvents
+          
+     NonconstrainedFoundation.Range("Print_Area").CopyPicture xlPrinter
+     Sleep 100
+     owd.Bookmarks("ex_p3").Range.Paste
+     DoEvents
+     
+     FrictionMountSupport.Range("Print_Area").CopyPicture xlPrinter
+     Sleep 100
+     owd.Bookmarks("ex_p4").Range.Paste
+     DoEvents
+     
+     Application.DisplayAlerts = False
+     Application.ScreenUpdating = False
+     Application.CutCopyMode = False
+     
+'    owd.Bookmarks("xxxxxxxx").Range.Text = ds.Range("" & i)
+'    owd.Bookmarks("xxxxxxxx").Range.Text = ds.Range("" & i)
+'    owd.Bookmarks("xxxxxxxx").Range.Text = ds.Range("" & i)
+'    owd.Bookmarks("xxxxxxxx").Range.Text = ds.Range("" & i)
+'    owd.Bookmarks("xxxxxxxx").Range.Text = ds.Range("" & i)
+'    owd.Bookmarks("xxxxxxxx").Range.Text = ds.Range("" & i)
+'    owd.Bookmarks("xxxxxxxx").Range.Text = ds.Range("" & i)
+    
+    
+'    cust_logo = my_path & "\" & ds.Range("p" & i)
+'    If (Dir(cust_logo) <> "") Then
+'        owd.Bookmarks("cust_logo").Range.InlineShapes.AddPicture Filename:=cust_logo
+'
+'    End If
+    
+End Function
+Public Function save_files(ByVal i As Long)
+    Dim fname As String
+    
+    save_to = Trim(ds.Range("O" & i).Value)
+    CreateDir (save_to)
+    
+    fname = save_to & "\" & ds.Range("N" & i)
+    fname = Replace(fname, "\\", "\")
+    
+    DeleteFile (fname & ".pdf")
+    DeleteFile (fname & ".docx")
+    DeleteFile (fname & ".xlsx")
+    
+    owd.SaveAs Filename:=fname & ".docx"
+    owd.ExportAsFixedFormat OutputFileName:=fname & ".pdf", ExportFormat:=17, OpenAfterExport:=False
+    DoEvents
+    
+    Application.StatusBar = "Saving Calculation excel"
+    
+    Worksheets(Array("LTS-6 Loads", "Design Loading", "Steel Pole", "Constrained Foundation", "Nonconstrained Foundation", "Friction Mount Support", "Antenna Connection")).Copy
+    With ActiveWorkbook
+         .SaveAs Filename:=fname & ".xlsx", FileFormat:=xlOpenXMLWorkbook
+         .Close SaveChanges:=False
+    End With
+    
+End Function
+
+Sub open_word_template()
+    Set owa = CreateObject("Word.Application")
+    owa.Visible = False
+    Set owd = owa.Documents.Open(Filename:=my_path & "\calc_book_template.docx", ReadOnly:=False, AddToRecentFiles:=False)
+    DoEvents
+End Sub
+Sub DeleteFile(ByVal FileToDelete As String)
+   If (Dir(FileToDelete) <> "") Then
+      SetAttr FileToDelete, vbNormal
+      Kill FileToDelete
+   End If
+End Sub
+Sub close_down()
+
+    owd.Close
+    owa.Quit
+    Set owd = Nothing
+    Set owa = Nothing
+    DoEvents
+    
+End Sub
+Sub get_data()
+    
+    Dim in_file As Workbook
+    Dim data_sheet As Worksheet
+    
+    ds.Cells.ClearContents
+    
+    f_name = Application.GetOpenFilename(FileFilter:="Excel Files (*.xls; *.xlsx), *.xls", Title:="Please select input data file")
+    If f_name = False Then
+       Exit Sub
+    End If
+    Set in_file = Workbooks.Open(f_name)
+    DoEvents
+    Set data_sheet = in_file.Worksheets(1)
+    If data_sheet.Cells(1, 1).Value <> "project_name" Then
+       e = MsgBox("Incorrect sheet/workbook selected..The tool expects the first sheet in the workbook selected to contain the base data. Also the first cell should be 'project_name'", vbCritical, "Incorrect Input data")
+       f_name = False
+       Exit Sub
+    End If
+    
+   
+    data_sheet.AutoFilterMode = False
+    
+    data_sheet.Cells.Copy
+    ds.Activate
+    ds.Range("A1").Select
+    ds.Paste
+    Application.CutCopyMode = False
+    ds.Range("A1").Select
+    
+    in_file.Close
+    data_count = Application.WorksheetFunction.CountA(ds.Range("A:A"))
+    DoEvents
+    Set data_sheet = Nothing
+    Set in_file = Nothing
+End Sub
+
+Sub CreateDir(strPath As String)
+    Dim elm As Variant
+    Dim strCheckPath As String
+
+    strCheckPath = ""
+    For Each elm In Split(strPath, "\")
+        strCheckPath = strCheckPath & elm & "\"
+        If Len(Dir(strCheckPath, vbDirectory)) = 0 Then MkDir strCheckPath
+    Next
+End Sub
+
